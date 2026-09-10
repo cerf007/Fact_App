@@ -42,13 +42,60 @@
         </VBox>
     </top>
     <center>
-        <Label text="Sistema de facturación" BorderPane.alignment="CENTER">
-            <font>
-                <Font size="18.0" />
-            </font>
-        </Label>
-    </center>
+        <VBox alignment="CENTER" spacing="20.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+            <children>
+                <Label text="Resumen de Inventario">
+                    <font>
+                        <Font name="System Bold" size="20.0" />
+                    </font>
+                </Label>
 
+                <!-- Panel con Tarjetas de Resumen -->
+                <VBox alignment="CENTER" prefWidth="320.0" spacing="15.0">
+                    <children>
+                        <!-- Tarjeta 1: Total Productos -->
+                        <VBox style="-fx-background-color: #ffffff; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #dddddd; -fx-border-radius: 8;">
+                            <children>
+                                <Label text="Total Unidades en Inventario" textFill="#666666">
+                                    <font><Font size="13.0" /></font>
+                                </Label>
+                                <Label fx:id="lblTotalProductos" text="0" textFill="#1a5276">
+                                    <font><Font name="System Bold" size="22.0" /></font>
+                                </Label>
+                            </children>
+                        </VBox>
+
+                        <!-- Tarjeta 2: Categorías -->
+                        <VBox style="-fx-background-color: #ffffff; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #dddddd; -fx-border-radius: 8;">
+                            <children>
+                                <Label text="Categorías Registradas" textFill="#666666">
+                                    <font><Font size="13.0" /></font>
+                                </Label>
+                                <Label fx:id="lblTotalCategorias" text="0" textFill="#1a5276">
+                                    <font><Font name="System Bold" size="22.0" /></font>
+                                </Label>
+                            </children>
+                        </VBox>
+
+                        <!-- Tarjeta 3: Total Precio en Inventario -->
+                        <VBox style="-fx-background-color: #ffffff; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #dddddd; -fx-border-radius: 8;">
+                            <children>
+                                <Label text="Valor Total del Inventario" textFill="#666666">
+                                    <font><Font size="13.0" /></font>
+                                </Label>
+                                <Label fx:id="lblTotalPrecio" text="C$ 0.00" textFill="#27ae60">
+                                    <font><Font name="System Bold" size="22.0" /></font>
+                                </Label>
+                            </children>
+                        </VBox>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </center>
     <right>
         <VBox alignment="CENTER">
             <padding>
