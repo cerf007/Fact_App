@@ -11,4 +11,6 @@ module ni.edu.uam.fact_app {
     opens ni.edu.uam.fact_app.controller to javafx.fxml;
     exports ni.edu.uam.fact_app;
     opens ni.edu.uam.fact_app to javafx.fxml;
+    exports ni.edu.uam.fact_app.models;
+    opens ni.edu.uam.fact_app.models to javafx.base, javafx.fxml;
 }
