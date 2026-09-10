@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Categoria {
-    private String id;
+    private Integer id;
     private String nombre;
     private  boolean activa;
 

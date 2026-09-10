@@ -2,6 +2,7 @@ module ni.edu.uam.fact_app {
     requires javafx.controls;
     requires javafx.fxml;
     requires static lombok;
+    requires java.desktop;
 
 
     exports ni.edu.uam.fact_app.application;
