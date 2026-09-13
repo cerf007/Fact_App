@@ -14,6 +14,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.Separator?>
 <BorderPane prefHeight="450.0" prefWidth="680.0"
             xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -34,11 +36,51 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-                <ToolBar>
+                <ToolBar style="-fx-background-color: #f4f4f4; -fx-border-color: #d1d1d1; -fx-border-width: 0 0 1 0; -fx-padding: 4 8 4 8;">
                     <items>
-                        <Button fx:id="btnCategorias" mnemonicParsing="false" onAction="#abrirCategorias" text="Categorías" />
-                        <Button fx:id="btnProductos" mnemonicParsing="false" onAction="#abrirProductos" text="Productos" />
-                        <Button fx:id="btnSalir" mnemonicParsing="false" onAction="#salir" text="Salir" />
+                        <!-- Botón Categorías -->
+                        <Button onAction="#abrirCategorias" style="-fx-background-color: transparent; -fx-cursor: hand;">
+                            <graphic>
+                                <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../icon/categoria.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                            <tooltip>
+                                <Tooltip text="Gestión de Categorías" showDelay="100ms" />
+                            </tooltip>
+                        </Button>
+
+                        <!-- Botón Productos -->
+                        <Button onAction="#abrirProductos" style="-fx-background-color: transparent; -fx-cursor: hand;">
+                            <graphic>
+                                <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../icon/producto.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                            <tooltip>
+                                <Tooltip text="Gestión de Productos" showDelay="100ms" />
+                            </tooltip>
+                        </Button>
+
+                        <Separator orientation="VERTICAL" style="-fx-padding: 0 2 0 2;" />
+
+                        <!-- Botón Salir / Cerrar -->
+                        <Button onAction="#salir" style="-fx-background-color: transparent; -fx-cursor: hand;">
+                            <graphic>
+                                <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../icon/cerrar.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                            <tooltip>
+                                <Tooltip text="Salir de la aplicación" showDelay="100ms" />
+                            </tooltip>
+                        </Button>
                     </items>
                 </ToolBar>
             </children>
