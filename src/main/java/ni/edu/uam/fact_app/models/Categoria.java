@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class Categoria {
     private Integer id;
     private String nombre;
-    private  boolean activa;
+    private  boolean activo;
 
     @Override
     public String toString() {
