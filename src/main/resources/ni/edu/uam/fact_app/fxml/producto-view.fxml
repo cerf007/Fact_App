@@ -49,19 +49,28 @@
                         <CheckBox fx:id="chkActivo" text="Activo" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                         <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="6">
-                            <children>
-                                <ImageView fx:id="imgProducto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
-                                <Button fx:id="btnImagen" onAction="#seleccionarImagen" prefHeight="30.0" prefWidth="160.0" text="Seleccionar Imagen">
-                                    <graphic>
-                                        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                            <image>
-                                                <Image url="@../icon/imagen.png" />
-                                            </image>
-                                        </ImageView>
-                                    </graphic>
-                                </Button>
-                            </children>
-                        </VBox>
+                        <children>
+                            <ImageView fx:id="imgProducto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
+
+                            <!-- NUEVO: aviso cuando la imagen se perdió -->
+                            <Label fx:id="lblEstadoImagen"
+                                   text=""
+                                   textFill="#c0392b"
+                                   wrapText="true"
+                                   maxWidth="150.0"
+                                   style="-fx-font-size: 10px; -fx-font-style: italic;" />
+
+                            <Button fx:id="btnImagen" onAction="#seleccionarImagen" prefHeight="30.0" prefWidth="160.0" text="Seleccionar Imagen">
+                                <graphic>
+                                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                        <image>
+                                            <Image url="@../icon/imagen.png" />
+                                        </image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                        </children>
+                    </VBox>
                     </children>
                 </GridPane>
 
@@ -70,20 +79,20 @@
                         <Button fx:id="btnGuardar" onAction="#guardar" text="Guardar">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../icon/guardar.png" />
-                                    </image>
+                                    <image><Image url="@../icon/guardar.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
 
+                        <Button fx:id="btnActualizar" onAction="#actualizar" text="Actualizar" />
+
+                        <Button fx:id="btnEliminar" onAction="#eliminar" text="Eliminar"
+                                style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
 
                         <Button fx:id="btnCerrar" onAction="#cerrar" text="Cerrar">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../icon/cerrar.png" />
-                                    </image>
+                                    <image><Image url="@../icon/cerrar.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>

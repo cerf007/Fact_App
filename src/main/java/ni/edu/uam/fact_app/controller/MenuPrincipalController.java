@@ -5,9 +5,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import ni.edu.uam.fact_app.dao.CategoriaDAO;
+import ni.edu.uam.fact_app.dao.ProductoDAO;
 import ni.edu.uam.fact_app.models.Categoria;
 import ni.edu.uam.fact_app.models.Producto;
-import ni.edu.uam.fact_app.util.DataRepository;
 import ni.edu.uam.fact_app.util.SceneManager;
 
 import java.io.IOException;
@@ -23,14 +24,27 @@ public class MenuPrincipalController {
     @FXML private Label lblTotalCategorias;
     @FXML private Label lblTotalPrecio;
 
+    private final ProductoDAO productoDAO = new ProductoDAO();
+    private final CategoriaDAO categoriaDAO = new CategoriaDAO();
+
     @FXML
     public void initialize() {
         actualizarDashboard();
     }
 
     public void actualizarDashboard() {
-        List<Producto> productos = DataRepository.getProductos();
-        List<Categoria> categorias = DataRepository.getCategorias();
+        List<Producto> productos;
+        List<Categoria> categorias;
+        try {
+            productos = productoDAO.listar();
+            categorias = categoriaDAO.listar();
+        } catch (RuntimeException ex) {
+
+            productos = List.of();
+            categorias = List.of();
+            new Alert(Alert.AlertType.WARNING,
+                    "No se pudo consultar la base de datos: " + ex.getMessage()).showAndWait();
+        }
 
         int totalUnidades = productos.stream()
                 .mapToInt(Producto::getExistencia)
@@ -53,14 +67,15 @@ public class MenuPrincipalController {
         lblProductosActivos.setText(String.valueOf(productosDistintosActivos));
         lblTotalCategorias.setText(String.valueOf(categoriasActivas));
 
-        NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "NI"));
+        NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(Locale.of("es", "NI"));
         lblTotalPrecio.setText(formatoMoneda.format(valorTotal));
     }
 
     @FXML
     private void abrirCategorias() {
         try {
-            SceneManager.abrirVentana("/ni/edu/uam/fact_app/fxml/categoria-view.fxml", "Gestión de categorías");
+            SceneManager.abrirVentana("/ni/edu/uam/fact_app/fxml/categoria-view.fxml",
+                    "Gestión de categorías");
             actualizarDashboard();
         } catch (IOException e) {
             new Alert(Alert.AlertType.ERROR, "No fue posible abrir Categorías.").showAndWait();
@@ -70,7 +85,8 @@ public class MenuPrincipalController {
     @FXML
     private void abrirProductos() {
         try {
-            SceneManager.abrirVentana("/ni/edu/uam/fact_app/fxml/producto-view.fxml", "Gestión de productos");
+            SceneManager.abrirVentana("/ni/edu/uam/fact_app/fxml/producto-view.fxml",
+                    "Gestión de productos");
             actualizarDashboard();
         } catch (IOException e) {
             new Alert(Alert.AlertType.ERROR, "No fue posible abrir Productos.").showAndWait();
@@ -79,7 +95,8 @@ public class MenuPrincipalController {
 
     @FXML
     private void salir() {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar la aplicación?", ButtonType.OK, ButtonType.CANCEL);
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar la aplicación?",
+                ButtonType.OK, ButtonType.CANCEL);
         if (a.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             Platform.exit();
         }

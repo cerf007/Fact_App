@@ -1,11 +1,15 @@
 package ni.edu.uam.fact_app.controller;
 
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import ni.edu.uam.fact_app.dao.CategoriaDAO;
 import ni.edu.uam.fact_app.models.Categoria;
-import ni.edu.uam.fact_app.util.DataRepository;
+import ni.edu.uam.fact_app.util.CategoriaValidador;
+import ni.edu.uam.fact_app.util.ResultadoValidacion;
+import ni.edu.uam.fact_app.util.Validador;
 
 public class CategoriaController {
 
@@ -18,32 +22,55 @@ public class CategoriaController {
     @FXML private TableColumn<Categoria, String> colNombre;
     @FXML private TableColumn<Categoria, Boolean> colActivo;
 
+    private final CategoriaDAO dao = new CategoriaDAO();
+    private final Validador<Categoria> validador = new CategoriaValidador(dao);
+
     @FXML
     private void initialize() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
 
-        tblCategorias.setItems(DataRepository.getCategorias());
+        chkActivo.setSelected(true);
+        recargar();
+    }
+
+    private void recargar() {
+        tblCategorias.setItems(
+                FXCollections.observableArrayList(dao.listar())
+        );
     }
 
     @FXML
     private void guardar() {
-        if (txtNombre.getText().isBlank()) {
-            mensaje(Alert.AlertType.WARNING, "Ingrese el nombre de la categoría.");
-            return;
-        }
-
-        int nuevoId = DataRepository.getCategorias().size() + 1;
-        Categoria nuevaCategoria = new Categoria(
-                nuevoId,
-                txtNombre.getText().trim(),
+        Categoria nueva = new Categoria(
+                null,
+                txtNombre.getText() == null ? "" : txtNombre.getText().trim(),
                 chkActivo.isSelected()
         );
 
-        DataRepository.getCategorias().add(nuevaCategoria);
-        mensaje(Alert.AlertType.INFORMATION, "Categoría agregada correctamente.");
-        limpiar();
+        ResultadoValidacion res = validador.validar(nueva);
+        if (!res.isValido()) {
+            mensaje(Alert.AlertType.WARNING, res.getMensaje());
+            return;
+        }
+
+        if (res.getTipo() == ResultadoValidacion.Tipo.ADVERTENCIA) {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, res.getMensaje(),
+                    ButtonType.OK, ButtonType.CANCEL);
+            if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                return;
+            }
+        }
+
+        try {
+            dao.guardar(nueva);
+            mensaje(Alert.AlertType.INFORMATION, "Categoría agregada correctamente.");
+            limpiar();
+            recargar();
+        } catch (RuntimeException ex) {
+            mensaje(Alert.AlertType.ERROR, "No se pudo guardar: " + ex.getMessage());
+        }
     }
 
     @FXML
