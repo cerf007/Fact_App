@@ -3,6 +3,7 @@ package ni.edu.uam.fact_app.controller;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -33,6 +34,7 @@ public class ProductoController {
     @FXML private CheckBox chkActivo;
     @FXML private ImageView imgProducto;
     @FXML private Label lblEstadoImagen;
+    @FXML private TextField txtBuscar;
 
     @FXML private TableView<Producto> tblProductos;
     @FXML private TableColumn<Producto, String> colCodigo;
@@ -46,8 +48,9 @@ public class ProductoController {
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
     private final Validador<Producto> validador = new ProductoValidador(productoDAO);
 
-    /** Fuente persistente para el TableView. No se recrea; solo se refresca con setAll(). */
     private final ObservableList<Producto> productos = FXCollections.observableArrayList();
+
+    private FilteredList<Producto> productosFiltrados;
 
     private Producto productoSeleccionado;
     private String rutaImagen;
@@ -57,9 +60,12 @@ public class ProductoController {
         configurarColumnas();
         configurarComboCategorias();
         configurarSeleccionTabla();
+        configurarBuscador();
         chkActivo.setSelected(true);
 
-        tblProductos.setItems(productos);
+        productosFiltrados = new FilteredList<>(productos, p -> true);
+        tblProductos.setItems(productosFiltrados);
+
         recargar();
     }
 
@@ -89,7 +95,35 @@ public class ProductoController {
                 });
     }
 
-    /** Refresca la ObservableList persistente en lugar de reemplazar items del TableView. */
+    private void configurarBuscador() {
+        txtBuscar.textProperty().addListener((obs, viejo, nuevo) -> aplicarFiltro());
+    }
+
+    private void aplicarFiltro() {
+        String texto = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase();
+
+        productosFiltrados.setPredicate(p -> {
+            if (texto.isEmpty()) return true;
+
+            if (p.getCodigo() != null && p.getCodigo().toLowerCase().contains(texto)) {
+                return true;
+            }
+            if (p.getNombre() != null && p.getNombre().toLowerCase().contains(texto)) {
+                return true;
+            }
+            if (p.getCategoria() != null && p.getCategoria().getNombre() != null
+                    && p.getCategoria().getNombre().toLowerCase().contains(texto)) {
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @FXML
+    private void limpiarBusqueda() {
+        txtBuscar.clear();
+    }
+
     private void recargar() {
         productos.setAll(productoDAO.listar());
     }

@@ -14,7 +14,6 @@
     <top>
         <VBox spacing="15.0" BorderPane.alignment="CENTER">
             <children>
-                <!-- Formulario con GridPane -->
                 <GridPane hgap="10.0" vgap="10.0">
                     <columnConstraints>
                         <ColumnConstraints hgrow="NEVER" minWidth="80.0" />
@@ -49,28 +48,27 @@
                         <CheckBox fx:id="chkActivo" text="Activo" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                         <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="6">
-                        <children>
-                            <ImageView fx:id="imgProducto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
+                            <children>
+                                <ImageView fx:id="imgProducto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
 
-                            <!-- NUEVO: aviso cuando la imagen se perdió -->
-                            <Label fx:id="lblEstadoImagen"
-                                   text=""
-                                   textFill="#c0392b"
-                                   wrapText="true"
-                                   maxWidth="150.0"
-                                   style="-fx-font-size: 10px; -fx-font-style: italic;" />
+                                <Label fx:id="lblEstadoImagen"
+                                       text=""
+                                       textFill="#c0392b"
+                                       wrapText="true"
+                                       maxWidth="150.0"
+                                       style="-fx-font-size: 10px; -fx-font-style: italic;" />
 
-                            <Button fx:id="btnImagen" onAction="#seleccionarImagen" prefHeight="30.0" prefWidth="160.0" text="Seleccionar Imagen">
-                                <graphic>
-                                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                        <image>
-                                            <Image url="@../icon/imagen.png" />
-                                        </image>
-                                    </ImageView>
-                                </graphic>
-                            </Button>
-                        </children>
-                    </VBox>
+                                <Button fx:id="btnImagen" onAction="#seleccionarImagen" prefHeight="30.0" prefWidth="160.0" text="Seleccionar Imagen">
+                                    <graphic>
+                                        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                            <image>
+                                                <Image url="@../icon/imagen.png" />
+                                            </image>
+                                        </ImageView>
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </VBox>
                     </children>
                 </GridPane>
 
@@ -96,6 +94,18 @@
                                 </ImageView>
                             </graphic>
                         </Button>
+                    </children>
+                </HBox>
+
+                <!-- NUEVO: barra de búsqueda -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Label text="Buscar:" />
+                        <TextField fx:id="txtBuscar"
+                                   promptText="Código, nombre o categoría"
+                                   HBox.hgrow="ALWAYS"
+                                   maxWidth="1.7976931348623157E308" />
+                        <Button text="Limpiar" onAction="#limpiarBusqueda" />
                     </children>
                 </HBox>
             </children>
