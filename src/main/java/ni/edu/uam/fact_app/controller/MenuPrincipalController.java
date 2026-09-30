@@ -3,12 +3,12 @@ package ni.edu.uam.fact_app.controller;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import ni.edu.uam.fact_app.dao.CategoriaDAO;
 import ni.edu.uam.fact_app.dao.ProductoDAO;
 import ni.edu.uam.fact_app.models.Categoria;
 import ni.edu.uam.fact_app.models.Producto;
+import ni.edu.uam.fact_app.util.Mensajes;
 import ni.edu.uam.fact_app.util.SceneManager;
 
 import java.io.IOException;
@@ -39,11 +39,10 @@ public class MenuPrincipalController {
             productos = productoDAO.listar();
             categorias = categoriaDAO.listar();
         } catch (RuntimeException ex) {
-
             productos = List.of();
             categorias = List.of();
-            new Alert(Alert.AlertType.WARNING,
-                    "No se pudo consultar la base de datos: " + ex.getMessage()).showAndWait();
+            Mensajes.mostrar(lblTotalProductos, Alert.AlertType.WARNING,
+                    "No se pudo consultar la base de datos: " + ex.getMessage());
         }
 
         int totalUnidades = productos.stream()
@@ -78,7 +77,8 @@ public class MenuPrincipalController {
                     "Gestión de categorías");
             actualizarDashboard();
         } catch (IOException e) {
-            new Alert(Alert.AlertType.ERROR, "No fue posible abrir Categorías.").showAndWait();
+            Mensajes.mostrar(lblTotalProductos, Alert.AlertType.ERROR,
+                    "No fue posible abrir Categorías.");
         }
     }
 
@@ -89,15 +89,14 @@ public class MenuPrincipalController {
                     "Gestión de productos");
             actualizarDashboard();
         } catch (IOException e) {
-            new Alert(Alert.AlertType.ERROR, "No fue posible abrir Productos.").showAndWait();
+            Mensajes.mostrar(lblTotalProductos, Alert.AlertType.ERROR,
+                    "No fue posible abrir Categorías.");
         }
     }
 
     @FXML
     private void salir() {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar la aplicación?",
-                ButtonType.OK, ButtonType.CANCEL);
-        if (a.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+        if (Mensajes.confirmar(lblTotalProductos, "¿Desea cerrar la aplicación?")) {
             Platform.exit();
         }
     }

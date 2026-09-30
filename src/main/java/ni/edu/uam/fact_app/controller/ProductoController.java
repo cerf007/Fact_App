@@ -16,6 +16,7 @@ import ni.edu.uam.fact_app.models.Producto;
 import ni.edu.uam.fact_app.util.ProductoValidador;
 import ni.edu.uam.fact_app.util.ResultadoValidacion;
 import ni.edu.uam.fact_app.util.Validador;
+import ni.edu.uam.fact_app.util.Mensajes;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -128,13 +129,13 @@ public class ProductoController {
         try {
             p = construirDesdeFormulario(null); // id null ⇒ INSERT
         } catch (NumberFormatException ex) {
-            mensaje(Alert.AlertType.ERROR, ex.getMessage());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR, ex.getMessage());
             return;
         }
 
         ResultadoValidacion res = validador.validar(p);
         if (!res.isValido()) {
-            mensaje(Alert.AlertType.WARNING, res.getMensaje());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING, res.getMensaje());
             return;
         }
 
@@ -144,7 +145,7 @@ public class ProductoController {
     @FXML
     private void actualizar() {
         if (productoSeleccionado == null) {
-            mensaje(Alert.AlertType.WARNING, "Seleccione un producto de la tabla primero.");
+            Mensajes.mostrar(txtCodigo,Alert.AlertType.WARNING, "Seleccione un producto de la tabla primero.");
             return;
         }
 
@@ -152,13 +153,13 @@ public class ProductoController {
         try {
             p = construirDesdeFormulario(productoSeleccionado.getId());
         } catch (NumberFormatException ex) {
-            mensaje(Alert.AlertType.ERROR, ex.getMessage());
+            Mensajes.mostrar(txtCodigo,Alert.AlertType.ERROR, ex.getMessage());
             return;
         }
 
         ResultadoValidacion res = validador.validar(p);
         if (!res.isValido()) {
-            mensaje(Alert.AlertType.WARNING, res.getMensaje());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING, res.getMensaje());
             return;
         }
 
@@ -168,15 +169,14 @@ public class ProductoController {
     @FXML
     private void eliminar() {
         if (productoSeleccionado == null) {
-            mensaje(Alert.AlertType.WARNING, "Seleccione un producto de la tabla primero.");
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING,
+                    "Seleccione un producto de la tabla primero.");
             return;
         }
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "¿Eliminar el producto '" + productoSeleccionado.getNombre() + "'?",
-                ButtonType.OK, ButtonType.CANCEL);
-        if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
-
+        if (!Mensajes.confirmar(txtCodigo,
+                "¿Eliminar el producto '" + productoSeleccionado.getNombre() + "'?")) {
+            return;
+        }
         int id = productoSeleccionado.getId();
         ejecutarSeguro(() -> productoDAO.eliminar(id), "Producto eliminado correctamente.");
     }
@@ -185,11 +185,13 @@ public class ProductoController {
     private void ejecutarSeguro(Runnable accion, String mensajeExito) {
         try {
             accion.run();
-            if (mensajeExito != null) mensaje(Alert.AlertType.INFORMATION, mensajeExito);
+            if (mensajeExito != null) {
+                Mensajes.mostrar(txtCodigo, Alert.AlertType.INFORMATION, mensajeExito);
+            }
             limpiar();
             recargar();
         } catch (RuntimeException ex) {
-            mensaje(Alert.AlertType.ERROR, "Operación fallida: " + ex.getMessage());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR, "Operación fallida: " + ex.getMessage());
         }
     }
 
@@ -251,7 +253,4 @@ public class ProductoController {
         tblProductos.getSelectionModel().clearSelection();
     }
 
-    private void mensaje(Alert.AlertType tipo, String texto) {
-        new Alert(tipo, texto, ButtonType.OK).showAndWait();
-    }
 }

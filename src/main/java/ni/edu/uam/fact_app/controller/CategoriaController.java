@@ -10,17 +10,25 @@ import ni.edu.uam.fact_app.models.Categoria;
 import ni.edu.uam.fact_app.util.CategoriaValidador;
 import ni.edu.uam.fact_app.util.ResultadoValidacion;
 import ni.edu.uam.fact_app.util.Validador;
+import ni.edu.uam.fact_app.util.Mensajes;
 
 public class CategoriaController {
 
-    @FXML private TextField txtId;
-    @FXML private TextField txtNombre;
-    @FXML private CheckBox chkActivo;
+    @FXML
+    private TextField txtId;
+    @FXML
+    private TextField txtNombre;
+    @FXML
+    private CheckBox chkActivo;
 
-    @FXML private TableView<Categoria> tblCategorias;
-    @FXML private TableColumn<Categoria, Integer> colId;
-    @FXML private TableColumn<Categoria, String> colNombre;
-    @FXML private TableColumn<Categoria, Boolean> colActivo;
+    @FXML
+    private TableView<Categoria> tblCategorias;
+    @FXML
+    private TableColumn<Categoria, Integer> colId;
+    @FXML
+    private TableColumn<Categoria, String> colNombre;
+    @FXML
+    private TableColumn<Categoria, Boolean> colActivo;
 
     private final CategoriaDAO dao = new CategoriaDAO();
     private final Validador<Categoria> validador = new CategoriaValidador(dao);
@@ -51,41 +59,36 @@ public class CategoriaController {
 
         ResultadoValidacion res = validador.validar(nueva);
         if (!res.isValido()) {
-            mensaje(Alert.AlertType.WARNING, res.getMensaje());
+            Mensajes.mostrar(txtNombre, Alert.AlertType.WARNING, res.getMensaje());
             return;
         }
 
         if (res.getTipo() == ResultadoValidacion.Tipo.ADVERTENCIA) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, res.getMensaje(),
-                    ButtonType.OK, ButtonType.CANCEL);
-            if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            if (!Mensajes.confirmar(txtNombre, res.getMensaje())) {
                 return;
             }
         }
 
         try {
             dao.guardar(nueva);
-            mensaje(Alert.AlertType.INFORMATION, "Categoría agregada correctamente.");
+            Mensajes.mostrar(txtNombre, Alert.AlertType.INFORMATION, "Categoría agregada correctamente.");
             limpiar();
             recargar();
         } catch (RuntimeException ex) {
-            mensaje(Alert.AlertType.ERROR, "No se pudo guardar: " + ex.getMessage());
+            Mensajes.mostrar(txtNombre, Alert.AlertType.ERROR, "No se pudo guardar: " + ex.getMessage());
         }
     }
 
-    @FXML
-    private void limpiar() {
-        txtId.clear();
-        txtNombre.clear();
-        chkActivo.setSelected(true);
-    }
+        @FXML
+        private void limpiar () {
+            txtId.clear();
+            txtNombre.clear();
+            chkActivo.setSelected(true);
+        }
 
-    @FXML
-    private void cerrar() {
-        ((Stage) txtNombre.getScene().getWindow()).close();
-    }
+        @FXML
+        private void cerrar () {
+            ((Stage) txtNombre.getScene().getWindow()).close();
+        }
 
-    private void mensaje(Alert.AlertType tipo, String texto) {
-        new Alert(tipo, texto, ButtonType.OK).showAndWait();
-    }
 }
