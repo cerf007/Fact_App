@@ -2,6 +2,7 @@ package ni.edu.uam.fact_app.controller;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -45,6 +46,9 @@ public class ProductoController {
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
     private final Validador<Producto> validador = new ProductoValidador(productoDAO);
 
+    /** Fuente persistente para el TableView. No se recrea; solo se refresca con setAll(). */
+    private final ObservableList<Producto> productos = FXCollections.observableArrayList();
+
     private Producto productoSeleccionado;
     private String rutaImagen;
 
@@ -54,6 +58,8 @@ public class ProductoController {
         configurarComboCategorias();
         configurarSeleccionTabla();
         chkActivo.setSelected(true);
+
+        tblProductos.setItems(productos);
         recargar();
     }
 
@@ -83,10 +89,10 @@ public class ProductoController {
                 });
     }
 
+    /** Refresca la ObservableList persistente en lugar de reemplazar items del TableView. */
     private void recargar() {
-        tblProductos.setItems(FXCollections.observableArrayList(productoDAO.listar()));
+        productos.setAll(productoDAO.listar());
     }
-
 
     private void cargarEnFormulario(Producto p) {
         productoSeleccionado = p;
@@ -122,12 +128,11 @@ public class ProductoController {
         }
     }
 
-
     @FXML
     private void guardar() {
         Producto p;
         try {
-            p = construirDesdeFormulario(null); // id null ⇒ INSERT
+            p = construirDesdeFormulario(null);
         } catch (NumberFormatException ex) {
             Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR, ex.getMessage());
             return;
@@ -145,7 +150,8 @@ public class ProductoController {
     @FXML
     private void actualizar() {
         if (productoSeleccionado == null) {
-            Mensajes.mostrar(txtCodigo,Alert.AlertType.WARNING, "Seleccione un producto de la tabla primero.");
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING,
+                    "Seleccione un producto de la tabla primero.");
             return;
         }
 
@@ -153,7 +159,7 @@ public class ProductoController {
         try {
             p = construirDesdeFormulario(productoSeleccionado.getId());
         } catch (NumberFormatException ex) {
-            Mensajes.mostrar(txtCodigo,Alert.AlertType.ERROR, ex.getMessage());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR, ex.getMessage());
             return;
         }
 
@@ -180,7 +186,6 @@ public class ProductoController {
         int id = productoSeleccionado.getId();
         ejecutarSeguro(() -> productoDAO.eliminar(id), "Producto eliminado correctamente.");
     }
-
 
     private void ejecutarSeguro(Runnable accion, String mensajeExito) {
         try {
@@ -252,5 +257,4 @@ public class ProductoController {
         rutaImagen = null;
         tblProductos.getSelectionModel().clearSelection();
     }
-
 }
