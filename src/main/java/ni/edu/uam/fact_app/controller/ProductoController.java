@@ -34,7 +34,10 @@ public class ProductoController {
     @FXML private CheckBox chkActivo;
     @FXML private ImageView imgProducto;
     @FXML private Label lblEstadoImagen;
+
     @FXML private TextField txtBuscar;
+    @FXML private ComboBox<String> cmbFiltroEstado;
+    @FXML private ComboBox<Categoria> cmbFiltroCategoria;
 
     @FXML private TableView<Producto> tblProductos;
     @FXML private TableColumn<Producto, String> colCodigo;
@@ -44,12 +47,22 @@ public class ProductoController {
     @FXML private TableColumn<Producto, Integer> colExistencia;
     @FXML private TableColumn<Producto, String> colActivo;
 
+    private static final String FILTRO_TODOS = "Todos";
+    private static final String FILTRO_ACTIVOS = "Activos";
+    private static final String FILTRO_INACTIVOS = "Inactivos";
+
+    /** Sentinel para el ComboBox de categorías: id == null significa "sin filtro". */
+    private static final Categoria CATEGORIA_TODAS =
+            new Categoria(null, "Todas las categorías", true);
+
     private final ProductoDAO productoDAO = new ProductoDAO();
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
     private final Validador<Producto> validador = new ProductoValidador(productoDAO);
 
+    /** Fuente persistente para el TableView. No se recrea; solo se refresca con setAll(). */
     private final ObservableList<Producto> productos = FXCollections.observableArrayList();
 
+    /** Vista filtrada que alimenta al TableView (productos → productosFiltrados → TableView). */
     private FilteredList<Producto> productosFiltrados;
 
     private Producto productoSeleccionado;
@@ -61,6 +74,8 @@ public class ProductoController {
         configurarComboCategorias();
         configurarSeleccionTabla();
         configurarBuscador();
+        configurarFiltroEstado();
+        configurarFiltroCategoria();
         chkActivo.setSelected(true);
 
         productosFiltrados = new FilteredList<>(productos, p -> true);
@@ -99,23 +114,52 @@ public class ProductoController {
         txtBuscar.textProperty().addListener((obs, viejo, nuevo) -> aplicarFiltro());
     }
 
+    private void configurarFiltroEstado() {
+        cmbFiltroEstado.setItems(FXCollections.observableArrayList(
+                FILTRO_TODOS, FILTRO_ACTIVOS, FILTRO_INACTIVOS));
+        cmbFiltroEstado.setValue(FILTRO_TODOS);
+        cmbFiltroEstado.valueProperty().addListener((obs, viejo, nuevo) -> aplicarFiltro());
+    }
+
+    private void configurarFiltroCategoria() {
+        ObservableList<Categoria> items = FXCollections.observableArrayList();
+        items.add(CATEGORIA_TODAS);
+        items.addAll(categoriaDAO.listar()); // todas, no solo activas
+        cmbFiltroCategoria.setItems(items);
+        cmbFiltroCategoria.setValue(CATEGORIA_TODAS);
+        cmbFiltroCategoria.valueProperty().addListener((obs, viejo, nuevo) -> aplicarFiltro());
+    }
+
     private void aplicarFiltro() {
-        String texto = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase();
+        String texto = txtBuscar.getText() == null
+                ? "" : txtBuscar.getText().trim().toLowerCase();
+        String estado = cmbFiltroEstado.getValue();
+        Categoria categoriaFiltro = cmbFiltroCategoria.getValue();
 
         productosFiltrados.setPredicate(p -> {
-            if (texto.isEmpty()) return true;
+            if (!texto.isEmpty()) {
+                boolean matchTexto =
+                        (p.getCodigo() != null && p.getCodigo().toLowerCase().contains(texto))
+                                || (p.getNombre() != null && p.getNombre().toLowerCase().contains(texto))
+                                || (p.getCategoria() != null && p.getCategoria().getNombre() != null
+                                && p.getCategoria().getNombre().toLowerCase().contains(texto));
+                if (!matchTexto) return false;
+            }
 
-            if (p.getCodigo() != null && p.getCodigo().toLowerCase().contains(texto)) {
-                return true;
+            // 2) Estado
+            if (FILTRO_ACTIVOS.equals(estado) && !p.isActivo()) return false;
+            if (FILTRO_INACTIVOS.equals(estado) && p.isActivo()) return false;
+
+            // 3) Categoría exacta (si no es el sentinel "Todas")
+            if (categoriaFiltro != null && categoriaFiltro.getId() != null) {
+                if (p.getCategoria() == null
+                        || p.getCategoria().getId() == null
+                        || !p.getCategoria().getId().equals(categoriaFiltro.getId())) {
+                    return false;
+                }
             }
-            if (p.getNombre() != null && p.getNombre().toLowerCase().contains(texto)) {
-                return true;
-            }
-            if (p.getCategoria() != null && p.getCategoria().getNombre() != null
-                    && p.getCategoria().getNombre().toLowerCase().contains(texto)) {
-                return true;
-            }
-            return false;
+
+            return true;
         });
     }
 
@@ -124,6 +168,7 @@ public class ProductoController {
         txtBuscar.clear();
     }
 
+    /** Refresca la ObservableList persistente en lugar de reemplazar items del TableView. */
     private void recargar() {
         productos.setAll(productoDAO.listar());
     }

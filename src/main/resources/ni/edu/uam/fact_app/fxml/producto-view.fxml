@@ -97,7 +97,7 @@
                     </children>
                 </HBox>
 
-                <!-- NUEVO: barra de búsqueda -->
+                <!-- Búsqueda por texto -->
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
                         <Label text="Buscar:" />
@@ -106,6 +106,16 @@
                                    HBox.hgrow="ALWAYS"
                                    maxWidth="1.7976931348623157E308" />
                         <Button text="Limpiar" onAction="#limpiarBusqueda" />
+                    </children>
+                </HBox>
+
+                <!-- Filtros por estado y categoría -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Label text="Estado:" />
+                        <ComboBox fx:id="cmbFiltroEstado" prefWidth="130.0" />
+                        <Label text="Categoría:" />
+                        <ComboBox fx:id="cmbFiltroCategoria" prefWidth="200.0" />
                     </children>
                 </HBox>
             </children>
