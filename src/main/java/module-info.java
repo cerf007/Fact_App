@@ -4,6 +4,7 @@ module ni.edu.uam.fact_app {
     requires static lombok;
     requires java.desktop;
     requires java.sql;
+    requires io.github.cdimascio.dotenv.java;
 
     exports ni.edu.uam.fact_app.application;
     opens ni.edu.uam.fact_app.application to javafx.fxml;

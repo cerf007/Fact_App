@@ -40,3 +40,6 @@ build/
 
 ### Archivos locales de configuración del IDE ###
 .idea/*Settings.xml
+
+### Variables de entorno locales ###
+.env
