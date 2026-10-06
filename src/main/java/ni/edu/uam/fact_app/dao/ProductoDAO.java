@@ -148,6 +148,44 @@ public class ProductoDAO implements Crud<Producto> {
         }
     }
 
+    public boolean existeCodigo(String codigo, Integer idExcluir) {
+        String sql = (idExcluir == null)
+                ? "SELECT 1 FROM producto WHERE LOWER(codigo) = LOWER(?) LIMIT 1"
+                : "SELECT 1 FROM producto WHERE LOWER(codigo) = LOWER(?) AND id <> ? LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, codigo);
+            if (idExcluir != null) ps.setInt(2, idExcluir);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al verificar código duplicado: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean existeNombre(String nombre, Integer idExcluir) {
+        String sql = (idExcluir == null)
+                ? "SELECT 1 FROM producto WHERE LOWER(nombre) = LOWER(?) LIMIT 1"
+                : "SELECT 1 FROM producto WHERE LOWER(nombre) = LOWER(?) AND id <> ? LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            if (idExcluir != null) ps.setInt(2, idExcluir);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al verificar nombre duplicado: " + e.getMessage(), e);
+        }
+    }
+
     private Producto mapear(ResultSet rs) throws SQLException {
         Categoria categoria = new Categoria(
                 rs.getInt("cat_id"),

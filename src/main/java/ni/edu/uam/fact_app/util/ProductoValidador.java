@@ -4,7 +4,6 @@ import ni.edu.uam.fact_app.dao.ProductoDAO;
 import ni.edu.uam.fact_app.models.Producto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class ProductoValidador implements Validador<Producto> {
 
@@ -40,25 +39,16 @@ public class ProductoValidador implements Validador<Producto> {
             return ResultadoValidacion.error("La existencia no puede ser negativa.");
         }
 
-        String codigoNuevo = producto.getCodigo().trim();
-        String nombreNuevo = producto.getNombre().trim().toLowerCase();
-
-        // ← Aquí está el único cambio real: BD en lugar de DataRepository
-        List<Producto> existentes = dao.listar();
-
-        for (Producto p : existentes) {
-            if (producto.getId() != null && producto.getId().equals(p.getId())) {
-                continue; // no comparar consigo mismo en modo edición
-            }
-            if (p.getCodigo().equalsIgnoreCase(codigoNuevo)) {
-                return ResultadoValidacion.error(
-                        "El código '" + p.getCodigo() + "' ya está asignado a otro producto.");
-            }
-            if (p.getNombre().toLowerCase().equals(nombreNuevo)) {
-                return ResultadoValidacion.error(
-                        "Ya existe un producto con el nombre: '" + p.getNombre() + "'.");
-            }
+        if (dao.existeCodigo(producto.getCodigo().trim(), producto.getId())) {
+            return ResultadoValidacion.error(
+                    "Ya existe un producto con el código '" + producto.getCodigo().trim() + "'.");
         }
+
+        if (dao.existeNombre(producto.getNombre().trim(), producto.getId())) {
+            return ResultadoValidacion.error(
+                    "Ya existe un producto con el nombre '" + producto.getNombre().trim() + "'.");
+        }
+
         return ResultadoValidacion.exito();
     }
 }

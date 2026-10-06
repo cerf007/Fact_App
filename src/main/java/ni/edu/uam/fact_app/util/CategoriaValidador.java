@@ -23,9 +23,15 @@ public class CategoriaValidador implements Validador<Categoria> {
             return ResultadoValidacion.error("El nombre de la categoría no puede estar vacío.");
         }
 
-        String nombreNuevo = categoria.getNombre().trim().toLowerCase();
-        List<Categoria> existentes = dao.listar();   // ← antes: DataRepository.getCategorias()
+        String nombreNuevo = categoria.getNombre().trim();
+        String nombreLower = nombreNuevo.toLowerCase();
 
+        if (dao.existeNombre(nombreNuevo, categoria.getId())) {
+            return ResultadoValidacion.error(
+                    "Ya existe una categoría registrada con el nombre: '" + nombreNuevo + "'.");
+        }
+
+        List<Categoria> existentes = dao.listar();
         for (Categoria cat : existentes) {
             if (categoria.getId() != null && categoria.getId().equals(cat.getId())) {
                 continue;
@@ -33,15 +39,10 @@ public class CategoriaValidador implements Validador<Categoria> {
 
             String existente = cat.getNombre().toLowerCase();
 
-            if (existente.equals(nombreNuevo)) {
-                return ResultadoValidacion.error(
-                        "Ya existe una categoría registrada con el nombre: '" + cat.getNombre() + "'.");
-            }
-
-            boolean esPluralOSingular = existente.equals(nombreNuevo + "s")
-                    || nombreNuevo.equals(existente + "s");
-            boolean esSubcadena = (nombreNuevo.length() > 3 && existente.length() > 3)
-                    && (existente.contains(nombreNuevo) || nombreNuevo.contains(existente));
+            boolean esPluralOSingular = existente.equals(nombreLower + "s")
+                    || nombreLower.equals(existente + "s");
+            boolean esSubcadena = (nombreLower.length() > 3 && existente.length() > 3)
+                    && (existente.contains(nombreLower) || nombreLower.contains(existente));
 
             if (esPluralOSingular || esSubcadena) {
                 return ResultadoValidacion.advertencia(

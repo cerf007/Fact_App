@@ -98,6 +98,26 @@ public class CategoriaDAO implements Crud<Categoria> {
         }
     }
 
+
+    public boolean existeNombre(String nombre, Integer idExcluir) {
+        String sql = (idExcluir == null)
+                ? "SELECT 1 FROM categoria WHERE LOWER(nombre) = LOWER(?) LIMIT 1"
+                : "SELECT 1 FROM categoria WHERE LOWER(nombre) = LOWER(?) AND id <> ? LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            if (idExcluir != null) ps.setInt(2, idExcluir);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al verificar nombre duplicado: " + e.getMessage(), e);
+        }
+    }
+
     private Categoria mapear(ResultSet rs) throws SQLException {
         return new Categoria(
                 rs.getInt("id"),
