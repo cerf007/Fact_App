@@ -132,6 +132,22 @@ public class ProductoDAO implements Crud<Producto> {
         }
     }
 
+    public boolean tieneProductos(int categoriaId) {
+        String sql = "SELECT 1 FROM producto WHERE categoria_id = ? LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, categoriaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Error al verificar productos de la categoría: " + e.getMessage(), e);
+        }
+    }
+
     private Producto mapear(ResultSet rs) throws SQLException {
         Categoria categoria = new Categoria(
                 rs.getInt("cat_id"),

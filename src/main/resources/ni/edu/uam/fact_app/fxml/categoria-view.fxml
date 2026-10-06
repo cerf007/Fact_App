@@ -51,32 +51,35 @@
                 </GridPane>
 
                 <!-- Botones de Acción -->
+                <!-- Botones de Acción -->
                 <HBox spacing="10.0" alignment="CENTER_RIGHT">
                     <children>
-                        <Button text="Guardar" onAction="#guardar" style="-fx-background-color: #27ae60; -fx-text-fill: white;">
+                        <Button text="Guardar" onAction="#guardar"
+                                style="-fx-background-color: #27ae60; -fx-text-fill: white;">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../icon/guardar.png" />
-                                    </image>
+                                    <image><Image url="@../icon/guardar.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
+
+                        <Button text="Actualizar" onAction="#actualizar" />
+
+                        <Button text="Eliminar" onAction="#eliminar"
+                                style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+
                         <Button text="Limpiar" onAction="#limpiar">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../icon/limpiar.png" />
-                                    </image>
+                                    <image><Image url="@../icon/limpiar.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
+
                         <Button text="Cerrar" onAction="#cerrar">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../icon/cerrar.png" />
-                                    </image>
+                                    <image><Image url="@../icon/cerrar.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
