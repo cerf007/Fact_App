@@ -87,6 +87,14 @@
                         <Button fx:id="btnEliminar" onAction="#eliminar" text="Eliminar"
                                 style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
 
+                        <Button fx:id="btnLimpiar" onAction="#limpiar" text="Limpiar">
+                            <graphic>
+                                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                    <image><Image url="@../icon/limpiar.png" /></image>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+
                         <Button fx:id="btnCerrar" onAction="#cerrar" text="Cerrar">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">

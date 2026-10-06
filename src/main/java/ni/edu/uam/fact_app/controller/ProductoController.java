@@ -323,6 +323,7 @@ public class ProductoController {
         ((Stage) txtCodigo.getScene().getWindow()).close();
     }
 
+    @FXML
     private void limpiar() {
         productoSeleccionado = null;
         txtCodigo.clear();
