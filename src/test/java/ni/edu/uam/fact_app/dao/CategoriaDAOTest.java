@@ -3,6 +3,7 @@ package ni.edu.uam.fact_app.dao;
 import ni.edu.uam.fact_app.models.Categoria;
 import org.junit.jupiter.api.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,7 +14,7 @@ class CategoriaDAOTest {
     private static final CategoriaDAO dao = new CategoriaDAO();
 
     @Test @Order(1)
-    void guardarYListar() {
+    void guardarYListar() throws SQLException {
         Categoria nueva = new Categoria(null, "Test_JUnit_Guardar", true);
         dao.guardar(nueva);
         assertNotNull(nueva.getId(), "Postgres debió asignar un id");
@@ -25,7 +26,7 @@ class CategoriaDAOTest {
     }
 
     @Test @Order(2)
-    void buscarPorId() {
+    void buscarPorId() throws SQLException {
         Categoria nueva = new Categoria(null, "Test_JUnit_Buscar", true);
         dao.guardar(nueva);
 
@@ -37,7 +38,7 @@ class CategoriaDAOTest {
     }
 
     @Test @Order(3)
-    void actualizar() {
+    void actualizar() throws SQLException {
         Categoria nueva = new Categoria(null, "Test_JUnit_Actualizar", true);
         dao.guardar(nueva);
 
@@ -53,7 +54,7 @@ class CategoriaDAOTest {
     }
 
     @Test @Order(4)
-    void eliminar() {
+    void eliminar() throws SQLException {
         Categoria nueva = new Categoria(null, "Test_JUnit_Eliminar", true);
         dao.guardar(nueva);
         int id = nueva.getId();
@@ -61,5 +62,22 @@ class CategoriaDAOTest {
         dao.eliminar(id);
 
         assertNull(dao.buscar(id), "Después de eliminar, buscar() debe devolver null");
+    }
+
+
+    @Test @Order(5)
+    void existeNombreExcluyendoPropioId() throws SQLException {
+        Categoria nueva = new Categoria(null, "Test_JUnit_ExisteNombre", true);
+        dao.guardar(nueva);
+
+        assertTrue(dao.existeNombre("Test_JUnit_ExisteNombre", null));
+
+        assertFalse(dao.existeNombre("Test_JUnit_ExisteNombre", nueva.getId()));
+
+        assertTrue(dao.existeNombre("test_junit_existenombre", null));
+
+        assertFalse(dao.existeNombre("Test_JUnit_No_Existe", null));
+
+        dao.eliminar(nueva.getId());
     }
 }

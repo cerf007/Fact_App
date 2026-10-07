@@ -13,6 +13,7 @@ import ni.edu.uam.fact_app.util.SceneManager;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -38,11 +39,13 @@ public class MenuPrincipalController {
         try {
             productos = productoDAO.listar();
             categorias = categoriaDAO.listar();
-        } catch (RuntimeException ex) {
+        } catch (SQLException ex) {
             productos = List.of();
             categorias = List.of();
+            System.err.println("[BD] Error al consultar el dashboard: " + ex.getMessage());
             Mensajes.mostrar(lblTotalProductos, Alert.AlertType.WARNING,
-                    "No se pudo consultar la base de datos: " + ex.getMessage());
+                    "No se pudo consultar la base de datos.  \n"
+            + "Verifique su conexión e intente nuevamente");
         }
 
         int totalUnidades = productos.stream()

@@ -27,7 +27,7 @@ public class ProductoDAO implements Crud<Producto> {
             """;
 
     @Override
-    public void guardar(Producto entidad) {
+    public void guardar(Producto entidad) throws SQLException {
         String sql = """
                 INSERT INTO producto
                     (codigo, nombre, categoria_id, precio_venta, existencia, ruta_imagen, activo)
@@ -39,7 +39,7 @@ public class ProductoDAO implements Crud<Producto> {
 
             ps.setString(1, entidad.getCodigo());
             ps.setString(2, entidad.getNombre());
-            ps.setInt(3, entidad.getCategoria().getId()); // ← solo el id
+            ps.setInt(3, entidad.getCategoria().getId());
             ps.setBigDecimal(4, entidad.getPrecioVenta());
             ps.setInt(5, entidad.getExistencia());
             ps.setString(6, entidad.getRutaImagen());
@@ -49,61 +49,44 @@ public class ProductoDAO implements Crud<Producto> {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) entidad.setId(rs.getInt(1));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al guardar producto: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public List<Producto> listar() {
+    public List<Producto> listar() throws SQLException {
         String sql = SELECT_BASE + " ORDER BY p.id";
         List<Producto> lista = new ArrayList<>();
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) lista.add(mapear(rs));
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al listar productos: " + e.getMessage(), e);
         }
         return lista;
     }
 
     @Override
-    public Producto buscar(int id) {
+    public Producto buscar(int id) throws SQLException {
         String sql = SELECT_BASE + " WHERE p.id = ?";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapear(rs);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al buscar producto: " + e.getMessage(), e);
         }
         return null;
     }
 
     @Override
-    public void actualizar(Producto entidad) {
+    public void actualizar(Producto entidad) throws SQLException {
         String sql = """
                 UPDATE producto
-                   SET codigo = ?,
-                       nombre = ?,
-                       categoria_id = ?,
-                       precio_venta = ?,
-                       existencia = ?,
-                       ruta_imagen = ?,
-                       activo = ?
+                   SET codigo = ?, nombre = ?, categoria_id = ?,
+                       precio_venta = ?, existencia = ?, ruta_imagen = ?, activo = ?
                  WHERE id = ?
                 """;
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, entidad.getCodigo());
             ps.setString(2, entidad.getNombre());
             ps.setInt(3, entidad.getCategoria().getId());
@@ -113,76 +96,55 @@ public class ProductoDAO implements Crud<Producto> {
             ps.setBoolean(7, entidad.isActivo());
             ps.setInt(8, entidad.getId());
             ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al actualizar producto: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public void eliminar(int id) {
+    public void eliminar(int id) throws SQLException {
         String sql = "DELETE FROM producto WHERE id = ?";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
             ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al eliminar producto: " + e.getMessage(), e);
         }
     }
 
-    public boolean tieneProductos(int categoriaId) {
+    public boolean tieneProductos(int categoriaId) throws SQLException {
         String sql = "SELECT 1 FROM producto WHERE categoria_id = ? LIMIT 1";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, categoriaId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Error al verificar productos de la categoría: " + e.getMessage(), e);
         }
     }
 
-    public boolean existeCodigo(String codigo, Integer idExcluir) {
+    public boolean existeCodigo(String codigo, Integer idExcluir) throws SQLException {
         String sql = (idExcluir == null)
                 ? "SELECT 1 FROM producto WHERE LOWER(codigo) = LOWER(?) LIMIT 1"
                 : "SELECT 1 FROM producto WHERE LOWER(codigo) = LOWER(?) AND id <> ? LIMIT 1";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, codigo);
             if (idExcluir != null) ps.setInt(2, idExcluir);
-
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al verificar código duplicado: " + e.getMessage(), e);
         }
     }
 
-    public boolean existeNombre(String nombre, Integer idExcluir) {
+    public boolean existeNombre(String nombre, Integer idExcluir) throws SQLException {
         String sql = (idExcluir == null)
                 ? "SELECT 1 FROM producto WHERE LOWER(nombre) = LOWER(?) LIMIT 1"
                 : "SELECT 1 FROM producto WHERE LOWER(nombre) = LOWER(?) AND id <> ? LIMIT 1";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, nombre);
             if (idExcluir != null) ps.setInt(2, idExcluir);
-
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al verificar nombre duplicado: " + e.getMessage(), e);
         }
     }
 
@@ -192,7 +154,6 @@ public class ProductoDAO implements Crud<Producto> {
                 rs.getString("cat_nombre"),
                 rs.getBoolean("cat_activa")
         );
-
         return new Producto(
                 rs.getInt("id"),
                 rs.getString("codigo"),

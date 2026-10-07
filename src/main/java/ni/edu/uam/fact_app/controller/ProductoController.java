@@ -19,6 +19,7 @@ import ni.edu.uam.fact_app.util.ProductoValidador;
 import ni.edu.uam.fact_app.util.ResultadoValidacion;
 import ni.edu.uam.fact_app.util.Validador;
 import ni.edu.uam.fact_app.util.Mensajes;
+import java.sql.SQLException;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -51,7 +52,6 @@ public class ProductoController {
     private static final String FILTRO_ACTIVOS = "Activos";
     private static final String FILTRO_INACTIVOS = "Inactivos";
 
-    /** Sentinel para el ComboBox de categorías: id == null significa "sin filtro". */
     private static final Categoria CATEGORIA_TODAS =
             new Categoria(null, "Todas las categorías", true);
 
@@ -59,10 +59,8 @@ public class ProductoController {
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
     private final Validador<Producto> validador = new ProductoValidador(productoDAO);
 
-    /** Fuente persistente para el TableView. No se recrea; solo se refresca con setAll(). */
     private final ObservableList<Producto> productos = FXCollections.observableArrayList();
 
-    /** Vista filtrada que alimenta al TableView (productos → productosFiltrados → TableView). */
     private FilteredList<Producto> productosFiltrados;
 
     private Producto productoSeleccionado;
@@ -81,7 +79,11 @@ public class ProductoController {
         productosFiltrados = new FilteredList<>(productos, p -> true);
         tblProductos.setItems(productosFiltrados);
 
-        recargar();
+        try {
+            recargar();
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "cargar los productos");
+        }
     }
 
     private void configurarColumnas() {
@@ -97,10 +99,14 @@ public class ProductoController {
     }
 
     private void configurarComboCategorias() {
-        List<Categoria> activas = categoriaDAO.listar().stream()
-                .filter(Categoria::isActivo)
-                .toList();
-        cmbCategoria.setItems(FXCollections.observableArrayList(activas));
+        try {
+            List<Categoria> activas = categoriaDAO.listar().stream()
+                    .filter(Categoria::isActivo)
+                    .toList();
+            cmbCategoria.setItems(FXCollections.observableArrayList(activas));
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "cargar las categorías");
+        }
     }
 
     private void configurarSeleccionTabla() {
@@ -124,7 +130,11 @@ public class ProductoController {
     private void configurarFiltroCategoria() {
         ObservableList<Categoria> items = FXCollections.observableArrayList();
         items.add(CATEGORIA_TODAS);
-        items.addAll(categoriaDAO.listar()); // todas, no solo activas
+        try {
+            items.addAll(categoriaDAO.listar());
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "cargar las categorías");
+        }
         cmbFiltroCategoria.setItems(items);
         cmbFiltroCategoria.setValue(CATEGORIA_TODAS);
         cmbFiltroCategoria.valueProperty().addListener((obs, viejo, nuevo) -> aplicarFiltro());
@@ -168,11 +178,9 @@ public class ProductoController {
         txtBuscar.clear();
     }
 
-    /** Refresca la ObservableList persistente en lugar de reemplazar items del TableView. */
-    private void recargar() {
+    private void recargar() throws SQLException {
         productos.setAll(productoDAO.listar());
     }
-
     private void cargarEnFormulario(Producto p) {
         productoSeleccionado = p;
         txtCodigo.setText(p.getCodigo());
@@ -217,9 +225,16 @@ public class ProductoController {
             return;
         }
 
-        ResultadoValidacion res = validador.validar(p);
+        ResultadoValidacion res;
+        try {
+            res = validador.validar(p);
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "validar el producto");
+            return;
+        }
+
         if (!res.isValido()) {
-            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING, res.getMensaje());
+            mostrarValidacionFallida(res);
             return;
         }
 
@@ -242,9 +257,16 @@ public class ProductoController {
             return;
         }
 
-        ResultadoValidacion res = validador.validar(p);
+        ResultadoValidacion res;
+        try {
+            res = validador.validar(p);
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "validar el producto");
+            return;
+        }
+
         if (!res.isValido()) {
-            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING, res.getMensaje());
+            mostrarValidacionFallida(res);
             return;
         }
 
@@ -266,31 +288,57 @@ public class ProductoController {
         ejecutarSeguro(() -> productoDAO.eliminar(id), "Producto eliminado correctamente.");
     }
 
-    private void ejecutarSeguro(Runnable accion, String mensajeExito) {
+    @FunctionalInterface
+    private interface OperacionDAO {
+        void ejecutar() throws SQLException;
+    }
+
+    private void ejecutarSeguro(OperacionDAO accion, String mensajeExito) {
         try {
-            accion.run();
-            if (mensajeExito != null) {
-                Mensajes.mostrar(txtCodigo, Alert.AlertType.INFORMATION, mensajeExito);
-            }
-            limpiar();
-            recargar();
+            accion.ejecutar();
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "guardar los cambios");
+            return;
         } catch (RuntimeException ex) {
-            Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR, "Operación fallida: " + ex.getMessage());
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR,
+                    "Operación fallida: " + ex.getMessage());
+            return;
+        }
+
+        if (mensajeExito != null) {
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.INFORMATION, mensajeExito);
+        }
+        limpiar();
+        try {
+            recargar();
+        } catch (SQLException ex) {
+            Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING,
+                    "La operación se realizó, pero no se pudo actualizar la tabla.\n"
+                            + "Verifique su conexión a la base de datos.");
+            System.err.println("[BD] Error al recargar productos: " + ex.getMessage());
         }
     }
 
     private Producto construirDesdeFormulario(Integer id) {
         BigDecimal precio;
         int existencia;
+
         try {
             precio = txtPrecio.getText().isBlank()
                     ? BigDecimal.ZERO
                     : new BigDecimal(txtPrecio.getText().trim());
+        } catch (NumberFormatException ex) {
+            txtPrecio.requestFocus();
+            throw new NumberFormatException("El precio debe ser un número válido.");
+        }
+
+        try {
             existencia = txtExistencia.getText().isBlank()
                     ? -1
                     : Integer.parseInt(txtExistencia.getText().trim());
         } catch (NumberFormatException ex) {
-            throw new NumberFormatException("Precio o existencia deben ser numéricos.");
+            txtExistencia.requestFocus();
+            throw new NumberFormatException("La existencia debe ser un número entero.");
         }
 
         return new Producto(
@@ -337,4 +385,28 @@ public class ProductoController {
         rutaImagen = null;
         tblProductos.getSelectionModel().clearSelection();
     }
+
+    private void mostrarValidacionFallida(ResultadoValidacion res) {
+        Mensajes.mostrar(txtCodigo, Alert.AlertType.WARNING, res.getMensaje());
+        enfocarCampo(res.getCampo());
+    }
+
+    private void enfocarCampo(ResultadoValidacion.Campo campo) {
+        switch (campo) {
+            case CODIGO      -> txtCodigo.requestFocus();
+            case NOMBRE      -> txtNombre.requestFocus();
+            case CATEGORIA   -> cmbCategoria.requestFocus();
+            case PRECIO      -> txtPrecio.requestFocus();
+            case EXISTENCIA  -> txtExistencia.requestFocus();
+            case NINGUNO     -> { /* nada */ }
+        }
+    }
+
+    private void reportarErrorBD(SQLException ex, String contexto) {
+        System.err.println("[BD] Error al " + contexto + ": " + ex.getMessage());
+        Mensajes.mostrar(txtCodigo, Alert.AlertType.ERROR,
+                "No fue posible completar la operación.\n"
+                        + "Verifique su conexión a la base de datos e intente nuevamente.");
+    }
+
 }

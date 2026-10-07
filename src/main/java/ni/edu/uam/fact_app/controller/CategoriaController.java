@@ -13,6 +13,7 @@ import ni.edu.uam.fact_app.util.CategoriaValidador;
 import ni.edu.uam.fact_app.util.Mensajes;
 import ni.edu.uam.fact_app.util.ResultadoValidacion;
 import ni.edu.uam.fact_app.util.Validador;
+import java.sql.SQLException;
 
 public class CategoriaController {
 
@@ -40,7 +41,15 @@ public class CategoriaController {
         configurarSeleccionTabla();
         chkActivo.setSelected(true);
         tblCategorias.setItems(categorias);
-        recargar();
+        try {
+            recargar();
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "cargar las categorías");
+        }
+    }
+
+    private void recargar() throws SQLException {
+        categorias.setAll(dao.listar());
     }
 
     private void configurarColumnas() {
@@ -54,10 +63,6 @@ public class CategoriaController {
                 (obs, viejo, nuevo) -> {
                     if (nuevo != null) cargarEnFormulario(nuevo);
                 });
-    }
-
-    private void recargar() {
-        categorias.setAll(dao.listar());
     }
 
     private void cargarEnFormulario(Categoria c) {
@@ -94,10 +99,6 @@ public class CategoriaController {
                     "Seleccione una categoría de la tabla primero.");
             return;
         }
-        if (!Mensajes.confirmar(txtNombre,
-                "¿Eliminar la categoría '" + seleccionada.getNombre() + "'?")) {
-            return;
-        }
 
         try {
             if (productoDAO.tieneProductos(seleccionada.getId())) {
@@ -106,16 +107,18 @@ public class CategoriaController {
                                 + "Puede desactivarla en su lugar.");
                 return;
             }
-
-            dao.eliminar(seleccionada.getId());
-            Mensajes.mostrar(txtNombre, Alert.AlertType.INFORMATION,
-                    "Categoría eliminada correctamente.");
-            limpiar();
-            recargar();
-        } catch (RuntimeException ex) {
-            Mensajes.mostrar(txtNombre, Alert.AlertType.ERROR,
-                    "Operación fallida: " + ex.getMessage());
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "verificar los productos asociados");
+            return;
         }
+
+        if (!Mensajes.confirmar(txtNombre,
+                "¿Eliminar la categoría '" + seleccionada.getNombre() + "'?")) {
+            return;
+        }
+
+        int id = seleccionada.getId();
+        ejecutarSeguro(() -> dao.eliminar(id), "Categoría eliminada correctamente.");
     }
 
     @FXML
@@ -144,9 +147,19 @@ public class CategoriaController {
 
 
     private boolean validarConConfirmacion(Categoria categoria) {
-        ResultadoValidacion res = validador.validar(categoria);
+        ResultadoValidacion res;
+        try {
+            res = validador.validar(categoria);
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "validar la categoría");
+            return false;
+        }
+
         if (!res.isValido()) {
             Mensajes.mostrar(txtNombre, Alert.AlertType.WARNING, res.getMensaje());
+            if (res.getCampo() == ResultadoValidacion.Campo.NOMBRE) {
+                txtNombre.requestFocus();
+            }
             return false;
         }
         if (res.getTipo() == ResultadoValidacion.Tipo.ADVERTENCIA) {
@@ -155,17 +168,40 @@ public class CategoriaController {
         return true;
     }
 
-    private void ejecutarSeguro(Runnable accion, String mensajeExito) {
+    @FunctionalInterface
+    private interface OperacionDAO {
+        void ejecutar() throws SQLException;
+    }
+
+    private void ejecutarSeguro(OperacionDAO accion, String mensajeExito) {
         try {
-            accion.run();
-            if (mensajeExito != null) {
-                Mensajes.mostrar(txtNombre, Alert.AlertType.INFORMATION, mensajeExito);
-            }
-            limpiar();
-            recargar();
+            accion.ejecutar();
+        } catch (SQLException ex) {
+            reportarErrorBD(ex, "guardar los cambios");
+            return;
         } catch (RuntimeException ex) {
             Mensajes.mostrar(txtNombre, Alert.AlertType.ERROR,
                     "Operación fallida: " + ex.getMessage());
+            return;
         }
+
+        if (mensajeExito != null) {
+            Mensajes.mostrar(txtNombre, Alert.AlertType.INFORMATION, mensajeExito);
+        }
+        limpiar();
+        try {
+            recargar();
+        } catch (SQLException ex) {
+            Mensajes.mostrar(txtNombre, Alert.AlertType.WARNING,
+                    "La operación se realizó, pero no se pudo actualizar la tabla.");
+            System.err.println("[BD] Error al recargar categorías: " + ex.getMessage());
+        }
+    }
+
+    private void reportarErrorBD(SQLException ex, String contexto) {
+        System.err.println("[BD] Error al " + contexto + ": " + ex.getMessage());
+        Mensajes.mostrar(txtNombre, Alert.AlertType.ERROR,
+                "No fue posible completar la operación.\n"
+                        + "Verifique su conexión a la base de datos e intente nuevamente.");
     }
 }
